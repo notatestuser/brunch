@@ -2,11 +2,21 @@
 
 debug = require('debug')('brunch:generated-file')
 fs = require 'fs'
-inflection = require 'inflection'
 sysPath = require 'path'
 async = require 'async'
 common = require './common'
-{getTestFiles} = require '../helpers'
+
+getTestFiles = (config) ->
+  isTestFile = (generatedFile) ->
+    generatedFile.lastIndexOf(sysPath.normalize('test/'), 0) is 0 and
+    generatedFile.lastIndexOf('vendor') is -1
+
+  joinPublic = (generatedFile) ->
+    sysPath.join(config.paths.public, generatedFile)
+
+  joinTo = config.files.javascripts.joinTo
+  files = if typeof joinTo is 'string' then [joinTo] else Object.keys(joinTo)
+  files.filter(isTestFile).map(joinPublic)
 
 cachedTestFiles = null
 
@@ -90,7 +100,7 @@ flatten = (array) ->
   , []
 
 extractOrder = (files, config) ->
-  types = files.map (file) -> inflection.pluralize file.type
+  types = files.map (file) -> file.type + 's'
   orders = Object.keys(config.files)
     .filter (key) ->
       key in types
